@@ -1,0 +1,118 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { LucideIcon } from "lucide-react";
+import { User2, Package, LayoutDashboard, Store, ShoppingBag } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { RoleBadge } from "@/components/dashboard/RoleBadge";
+import { dashboardLinks, primaryRole, ROLE_CATALOG } from "@/lib/roles";
+import { cn } from "@/lib/utils";
+import type { AppRole } from "@/types/commerce";
+
+const BASE_NAV: { to: string; label: string; icon: LucideIcon; exact?: boolean }[] = [
+  { to: "/account", label: "Profile", icon: User2, exact: true },
+  { to: "/account/orders", label: "Orders", icon: Package },
+];
+
+export function AccountShell({ children }: { children: React.ReactNode }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  const { user, roles, isAdmin, isSuperAdmin, isVendor } = useAuth();
+  const primary = primaryRole(roles);
+  const meta = ROLE_CATALOG[primary];
+  const extraLinks = dashboardLinks(roles).filter((l) => l.to !== "/account");
+
+  return (
+    <div className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="grid h-14 w-14 place-items-center rounded-xl bg-primary/10 text-primary text-xl font-bold shrink-0">
+              {(user?.email?.[0] ?? "U").toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Account</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {roles.length ? roles.map((r) => <RoleBadge key={r} role={r} />) : <RoleBadge role="user" />}
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Signed in as <span className="font-medium text-foreground">{meta.label}</span>. Manage your profile and
+            orders, or jump to a workspace below.
+          </p>
+        </div>
+      </div>
+
+      {(isAdmin || isVendor) && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
+            >
+              <LayoutDashboard className="h-5 w-5 text-sky-600 mb-2" />
+              <div className="font-semibold group-hover:text-primary">
+                {isSuperAdmin ? "Super Admin" : "Admin Dashboard"}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Products, orders, vouchers, analytics</p>
+            </Link>
+          )}
+          {isVendor && (
+            <Link
+              to="/vendor"
+              className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
+            >
+              <Store className="h-5 w-5 text-emerald-600 mb-2" />
+              <div className="font-semibold group-hover:text-primary">Vendor Workspace</div>
+              <p className="text-xs text-muted-foreground mt-1">SKUs, inventory, and vendor analytics</p>
+            </Link>
+          )}
+          <Link
+            to="/products"
+            className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
+          >
+            <ShoppingBag className="h-5 w-5 text-primary mb-2" />
+            <div className="font-semibold group-hover:text-primary">Continue Shopping</div>
+            <p className="text-xs text-muted-foreground mt-1">Browse the IoT catalog</p>
+          </Link>
+        </div>
+      )}
+
+      <div className="grid lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
+        <aside className="space-y-4">
+          <nav className="flex lg:flex-col gap-2 overflow-x-auto pb-1 lg:pb-0" aria-label="Account sections">
+            {BASE_NAV.map(({ to, label, icon: Icon, exact }) => {
+              const active = exact ? path === to : path.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium whitespace-nowrap min-h-[44px] transition-colors",
+                    active
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card hover:bg-muted border-border",
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+          {extraLinks.length > 0 && (
+            <div className="hidden lg:block rounded-lg border bg-muted/30 p-3 text-xs space-y-2">
+              <p className="font-semibold text-muted-foreground uppercase tracking-wide">Workspaces</p>
+              {extraLinks.map((l) => (
+                <Link key={l.to} to={l.to} className="flex items-center gap-2 hover:text-primary">
+                  <l.icon className="h-3.5 w-3.5" />
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </aside>
+        <div className="min-w-0">{children}</div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,86 @@
+# NexusIoT Platform — Requirements & Environment Specification
+# Stack: React 19 + Vite 7 + TanStack Router/Start + Tailwind 4 + Supabase
+
+## Runtime
+- Node.js >= 20.18 (or Bun >= 1.1)
+- Package manager: bun (recommended) or npm
+
+## Environment variables (.env)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+
+## Install & run
+bun install
+bun run dev          # http://localhost:5173 (port may vary)
+bun run build
+bun run preview
+
+## Database
+supabase db push     # apply migrations in supabase/migrations/
+supabase start       # local stack (optional)
+
+## Roles (user_roles table)
+- user          — storefront customer
+- vendor        — vendor dashboard (/vendor)
+- admin         — platform admin (/admin)
+- super_admin   — full control: users, payment methods, site settings
+
+First registered user is auto-assigned super_admin (see migration trigger).
+Run supabase/migrations/20260528120000_super_admin_login.sql if the DB was created earlier.
+
+## Routes — Customer (Daraz-style storefront)
+/                     Home, featured deals, categories
+/products             Catalog + filters (price, availability, manufacturer)
+/products/:slug       Product detail (gallery, specs tabs, reviews, related)
+/product/:slug        Alias redirect → /products/:slug
+/iot-solutions        Enterprise IoT packages
+/cart                 Full cart page
+/checkout             3-step checkout + vouchers + payment methods
+/auth                 Sign in / sign up
+/account              Profile
+/account/orders       Order history
+
+## Routes — Vendor
+/vendor               Vendor dashboard
+/vendor/products      Assigned SKU inventory
+/vendor/orders        Order log (read-only)
+/vendor/analytics     SKU metrics
+
+## Routes — Super Admin
+/admin                Dashboard, low-stock alerts
+/admin/products       CRUD products (PKR, stock, images, tags)
+/admin/orders         Order queue + status
+/admin/vouchers       Promo codes
+/admin/analytics      Revenue & category charts
+/admin/settings       Site metadata + payment toggles
+/admin/users          Role assignment (super_admin only)
+
+## API layer (src/api/)
+Frontend modules wrap Supabase PostgREST — no separate Python backend required.
+- products.ts   list, detail, related, CRUD
+- orders.ts     place order, list, status update
+- reviews.ts    fetch + submit product reviews
+- vouchers.ts   validate + list
+- settings.ts   site_settings + payment_methods
+
+## Hooks (src/hooks/)
+- useAuth / useRole — session + RBAC
+- useProduct — detail + reviews + related (parallel queries)
+- useSiteSettings / usePaymentMethods
+- useCart — localStorage cart (context)
+
+## Design tokens (src/styles.css)
+Primary: sky-500/600, ink nav: slate-950, backgrounds: slate-50
+Buy Now CTA: #f57224 (Daraz orange)
+
+## Seed vouchers (after migration)
+NEXUS10 — 10% off orders >= PKR 5,000
+IOT500  — PKR 500 flat off orders >= PKR 10,000
+
+## Responsive breakpoints
+Mobile-first; sticky header; collapsible admin/vendor sidebar on lg+
+
+## Security
+- RLS enabled on all tables
+- Admin/vendor routes guarded via beforeLoad + Supabase session
+- Never commit .env or service role keys
