@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     css: {
-      postcss: path.join(root, "postcss.config.cjs"),
+      postcss: path.join(root, "postcss.config.win.cjs"),
     },
     plugins: [
       {
