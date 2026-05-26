@@ -27,19 +27,22 @@ export const Route = createFileRoute("/admin")({
 function AdminLayout() {
   const { isSuper, roles, email } = Route.useRouteContext();
   const nav: NavItem[] = [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { to: "/admin/products", label: "Products", icon: Package },
-    { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
-    { to: "/admin/vouchers", label: "Vouchers", icon: Ticket },
-    { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-    { to: "/admin/settings", label: "Settings", icon: Settings },
+    { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true, group: "Overview" },
+    { to: "/admin/products", label: "Products", icon: Package, group: "Commerce" },
+    { to: "/admin/orders", label: "Orders", icon: ShoppingBag, group: "Commerce" },
+    { to: "/admin/vouchers", label: "Vouchers", icon: Ticket, group: "Commerce" },
+    { to: "/admin/analytics", label: "Analytics", icon: BarChart3, group: "Insights" },
+    { to: "/admin/settings", label: "Settings", icon: Settings, group: "Platform" },
   ];
-  if (isSuper) nav.push({ to: "/admin/users", label: "Users & Roles", icon: Users });
+  if (isSuper) {
+    nav.push({ to: "/admin/users", label: "Users & Roles", icon: Users, group: "Platform" });
+  }
 
   return (
     <DashboardShell
-      title={isSuper ? "Super Admin" : "Platform Admin"}
-      subtitle={isSuper ? "Full platform control" : "Catalog, orders & storefront ops"}
+      title={isSuper ? "Command Center" : "Admin Console"}
+      subtitle={isSuper ? "Super admin · full platform access" : "Catalog, orders & storefront ops"}
+      variant={isSuper ? "super_admin" : "admin"}
       nav={nav}
       userEmail={email}
       userRoles={roles}

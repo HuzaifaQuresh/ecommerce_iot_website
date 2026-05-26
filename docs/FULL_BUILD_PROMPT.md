@@ -36,4 +36,4 @@ Apply `supabase/migrations/*.sql` — tables: products, orders, order_items, vou
 - [ ] RLS + env vars configured
 - [ ] Seed vouchers NEXUS10, IOT500
 
-See `docs/PROJECT_SPEC.md` and `docs/ARCHITECTURE.md` for run commands.
+See `requirements.txt` and `docs/ARCHITECTURE.md` for run commands.

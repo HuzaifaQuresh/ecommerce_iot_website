@@ -31,11 +31,11 @@ export const Route = createFileRoute("/vendor")({
 });
 
 const NAV: NavItem[] = [
-  { to: "/vendor", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/vendor/products", label: "My Products", icon: Package },
-  { to: "/vendor/orders", label: "Orders", icon: ShoppingBag },
-  { to: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/vendor/settings", label: "Shop Profile", icon: Store },
+  { to: "/vendor", label: "Overview", icon: LayoutDashboard, exact: true, group: "Overview" },
+  { to: "/vendor/products", label: "My Products", icon: Package, group: "Catalog" },
+  { to: "/vendor/orders", label: "Orders", icon: ShoppingBag, group: "Catalog" },
+  { to: "/vendor/analytics", label: "Analytics", icon: BarChart3, group: "Insights" },
+  { to: "/vendor/settings", label: "Shop Profile", icon: Store, group: "Account" },
 ];
 
 function VendorLayout() {
@@ -43,7 +43,8 @@ function VendorLayout() {
   return (
     <DashboardShell
       title={shopName}
-      subtitle="Vendor workspace"
+      subtitle="Vendor partner workspace"
+      variant="vendor"
       nav={NAV}
       userEmail={email}
       userRoles={roles}

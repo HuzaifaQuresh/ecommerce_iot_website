@@ -3,7 +3,8 @@ import type { LucideIcon } from "lucide-react";
 import { User2, Package, LayoutDashboard, Store, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleBadge } from "@/components/dashboard/RoleBadge";
-import { dashboardLinks, primaryRole, ROLE_CATALOG } from "@/lib/roles";
+import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
+import { primaryRole, ROLE_CATALOG } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import type { AppRole } from "@/types/commerce";
 
@@ -17,7 +18,6 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
   const { user, roles, isAdmin, isSuperAdmin, isVendor } = useAuth();
   const primary = primaryRole(roles);
   const meta = ROLE_CATALOG[primary];
-  const extraLinks = dashboardLinks(roles).filter((l) => l.to !== "/account");
 
   return (
     <div className="mx-auto max-w-6xl w-full px-4 sm:px-6 py-6 sm:py-8">
@@ -43,37 +43,33 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {(isAdmin || isVendor) && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
-            >
-              <LayoutDashboard className="h-5 w-5 text-sky-600 mb-2" />
-              <div className="font-semibold group-hover:text-primary">
-                {isSuperAdmin ? "Super Admin" : "Admin Dashboard"}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Products, orders, vouchers, analytics</p>
-            </Link>
-          )}
-          {isVendor && (
-            <Link
-              to="/vendor"
-              className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
-            >
-              <Store className="h-5 w-5 text-emerald-600 mb-2" />
-              <div className="font-semibold group-hover:text-primary">Vendor Workspace</div>
-              <p className="text-xs text-muted-foreground mt-1">SKUs, inventory, and vendor analytics</p>
-            </Link>
-          )}
-          <Link
-            to="/products"
-            className="rounded-xl border bg-card p-4 hover:border-primary/40 hover:shadow-md transition-all group"
-          >
-            <ShoppingBag className="h-5 w-5 text-primary mb-2" />
-            <div className="font-semibold group-hover:text-primary">Continue Shopping</div>
-            <p className="text-xs text-muted-foreground mt-1">Browse the IoT catalog</p>
-          </Link>
+        <div className="mb-6 sm:mb-8">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Workspaces</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {isAdmin && (
+              <QuickActionCard
+                to="/admin"
+                label={isSuperAdmin ? "Super Admin" : "Admin Console"}
+                description="Products, orders, vouchers, analytics & settings"
+                icon={LayoutDashboard}
+                highlight={isSuperAdmin}
+              />
+            )}
+            {isVendor && (
+              <QuickActionCard
+                to="/vendor"
+                label="Vendor Workspace"
+                description="SKU inventory, orders & shop profile"
+                icon={Store}
+              />
+            )}
+            <QuickActionCard
+              to="/products"
+              label="Storefront"
+              description="Browse the IoT catalog"
+              icon={ShoppingBag}
+            />
+          </div>
         </div>
       )}
 
@@ -99,17 +95,6 @@ export function AccountShell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          {extraLinks.length > 0 && (
-            <div className="hidden lg:block rounded-lg border bg-muted/30 p-3 text-xs space-y-2">
-              <p className="font-semibold text-muted-foreground uppercase tracking-wide">Workspaces</p>
-              {extraLinks.map((l) => (
-                <Link key={l.to} to={l.to} className="flex items-center gap-2 hover:text-primary">
-                  <l.icon className="h-3.5 w-3.5" />
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-          )}
         </aside>
         <div className="min-w-0">{children}</div>
       </div>
