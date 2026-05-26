@@ -19,6 +19,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Vercel local link metadata
+.vercel/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
