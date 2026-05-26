@@ -27,6 +27,8 @@ git push -u origin main
 
 Do **not** add SPA `rewrites` in `vercel.json`; Nitro handles routing.
 
+**Note:** Do not add a root `requirements.txt` unless it is a real Python pip file. Vercel runs `uv pip install` on that filename and will fail. Project specs live in `docs/PROJECT_SPEC.md`.
+
 ## 3. Environment variables
 
 In **Project → Settings → Environment Variables**, add for **Production**, **Preview**, and **Development**:
