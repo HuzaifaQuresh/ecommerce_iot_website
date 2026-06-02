@@ -20,7 +20,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
 import { WorkspaceBanner } from "@/components/dashboard/WorkspaceBanner";
 import { DashboardPageHeader, SectionCard } from "@/components/site/PageLayout";
-import { getMockAnalytics } from "@/lib/mock-data";
+import { getMockAnalytics, MOCK_ORDERS } from "@/lib/mock-data";
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
@@ -65,7 +65,13 @@ function Dashboard() {
         orders: m.orders,
         revenue: m.revenue,
         low: m.low,
-        recent: [],
+        recent: MOCK_ORDERS.slice(0, 5).map((o) => ({
+          id: o.id,
+          total_pkr: o.total_pkr,
+          status: o.status,
+          customer_name: o.customer_name,
+          created_at: o.created_at,
+        })),
       };
     },
   });

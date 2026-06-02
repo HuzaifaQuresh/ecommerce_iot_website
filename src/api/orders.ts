@@ -103,6 +103,22 @@ export async function placeOrder(input: {
     })),
   );
   if (e2) throw e2;
+
+  // Increment voucher used_count if a voucher was applied
+  if (input.voucher_code) {
+    await supabase.rpc("increment_voucher_use", { voucher_code: input.voucher_code }).catch(() => {
+      // Non-fatal: fallback to manual increment
+      supabase
+        .from("vouchers")
+        .select("id, used_count")
+        .eq("code", input.voucher_code!)
+        .maybeSingle()
+        .then(({ data: v }) => {
+          if (v) supabase.from("vouchers").update({ used_count: (v.used_count ?? 0) + 1 }).eq("id", v.id);
+        });
+    });
+  }
+
   return created as OrderRow;
 }
 

@@ -23,13 +23,22 @@ function VendorDashboard() {
     queryKey: ["vendor-stats", vendorId],
     queryFn: async () => {
       const vid = vendorId ?? DEMO_VENDOR_ID;
+      let orderCount = 0;
       try {
         const { data: products, error } = await supabase.from("products").select("id,title,stock,price_pkr").eq("vendor_id", vid);
         if (error) throw error;
         if (products?.length) {
           const low = products.filter((p) => p.stock < 15);
           const inventoryValue = products.reduce((s, p) => s + Number(p.price_pkr) * p.stock, 0);
-          return { count: products.length, low, inventoryValue, products };
+          // Count orders containing vendor products
+          const productIds = products.map((p) => p.id);
+          const { data: lineItems } = await supabase
+            .from("order_items")
+            .select("order_id")
+            .in("product_id", productIds);
+          const uniqueOrders = new Set((lineItems ?? []).map((l) => l.order_id));
+          orderCount = uniqueOrders.size;
+          return { count: products.length, low, inventoryValue, products, orderCount };
         }
       } catch {
         /* demo */
@@ -37,7 +46,7 @@ function VendorDashboard() {
       const products = getVendorMockProducts(vid);
       const low = products.filter((p) => p.stock < 15);
       const inventoryValue = products.reduce((s, p) => s + Number(p.price_pkr) * p.stock, 0);
-      return { count: products.length, low, inventoryValue, products };
+      return { count: products.length, low, inventoryValue, products, orderCount };
     },
   });
 
@@ -85,7 +94,7 @@ function VendorDashboard() {
           accentClass="bg-amber-500/10 text-amber-600"
           hint="Under 15 units"
         />
-        <StatCard label="Orders" value="—" icon={ShoppingBag} accentClass={`bg-primary/10 ${theme.kpiIcon}`} hint="Read-only log" />
+        <StatCard label="Orders" value={data?.orderCount ?? "—"} icon={ShoppingBag} accentClass={`bg-primary/10 ${theme.kpiIcon}`} hint="Containing your products" />
       </div>
 
       <div>

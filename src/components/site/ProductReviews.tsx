@@ -9,11 +9,6 @@ import type { ProductReview } from "@/types/commerce";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
-const FALLBACK: ProductReview[] = [
-  { id: "r1", product_id: "", customer_name: "Ahmed Raza", rating: 5, verified: true, body: "Cloud response time is under 1s — perfect for smart home automation.", created_at: "2026-04-12" },
-  { id: "r2", product_id: "", customer_name: "Sana Iqbal", rating: 5, verified: true, body: "Zigbee mesh with gateway hub is rock solid, no dropouts in 3 weeks.", created_at: "2026-04-03" },
-  { id: "r3", product_id: "", customer_name: "Bilal Khan", rating: 4, verified: true, body: "Build quality feels premium. Battery life is great.", created_at: "2026-03-27" },
-];
 
 function initials(name: string) {
   return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
@@ -37,7 +32,7 @@ export function ProductReviews({
   reviews?: ProductReview[];
 }) {
   const qc = useQueryClient();
-  const list = reviews.length ? reviews : FALLBACK;
+  const list = reviews;
   const computedAvg = reviews.length
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : avgRating;
@@ -102,6 +97,13 @@ export function ProductReviews({
         </div>
       </div>
 
+      {list.length === 0 && (
+        <div className="mt-6 flex flex-col items-center justify-center py-10 text-center text-muted-foreground border rounded-xl bg-muted/20">
+          <Star className="h-10 w-10 mb-3 text-muted-foreground/30" />
+          <p className="font-medium text-foreground">No reviews yet</p>
+          <p className="text-sm mt-1">Be the first to leave a review for this product.</p>
+        </div>
+      )}
       <div className="mt-6 space-y-5">
         {list.map((r) => (
           <div key={r.id} className="flex gap-4 pb-5 border-b last:border-b-0">

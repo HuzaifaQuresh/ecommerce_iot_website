@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/commerce";
@@ -12,11 +12,15 @@ import { RoleAccessGrid } from "@/components/dashboard/RoleAccessGrid";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign In — NexusIoT" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    redirect: typeof s.redirect === "string" ? s.redirect : undefined,
+  }),
   component: Auth,
 });
 
 function Auth() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -30,6 +34,11 @@ function Auth() {
       navigate({ to: "/" });
       return;
     }
+    // Honour explicit ?redirect= param first (e.g. from account guard)
+    if (search.redirect) {
+      navigate({ to: search.redirect as "/" });
+      return;
+    }
     const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
     const list = (roles ?? []).map((r) => r.role as AppRole);
     if (list.includes("super_admin") || list.includes("admin")) {
@@ -40,7 +49,7 @@ function Auth() {
       navigate({ to: "/vendor" });
       return;
     }
-    navigate({ to: "/" });
+    navigate({ to: "/account" });
   };
 
   const signIn = async () => {
