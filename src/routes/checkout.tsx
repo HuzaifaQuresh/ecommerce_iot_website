@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { z } from "zod";
 import { useCart } from "@/contexts/CartContext";
 import { fmtPKR } from "@/lib/format";
@@ -15,6 +15,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { CheckCircle2, Tag, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { PageContainer, PageHeader, EmptyState } from "@/components/site/PageLayout";
 import { CheckoutOrderSummary, FreeShippingBanner } from "@/components/checkout/CheckoutOrderSummary";
 import { PaymentMethodCard } from "@/components/checkout/PaymentMethodCard";
@@ -45,6 +46,7 @@ const schema = z.object({
 function Checkout() {
   const { items, subtotal, clear } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: config, isLoading: configLoading } = useCheckoutConfig();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -59,6 +61,29 @@ function Checkout() {
     postal_code: "",
     landmark: "",
   });
+
+  // Auto-fill from saved profile + auth session
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name, phone, address, city, province, postal_code, landmark")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data: p }) => {
+        setForm((prev) => ({
+          ...prev,
+          customer_name: prev.customer_name || (p?.full_name ?? ""),
+          email: prev.email || (user.email ?? ""),
+          phone: prev.phone || (p?.phone ?? ""),
+          address: prev.address || ((p as any)?.address ?? ""),
+          city: prev.city || ((p as any)?.city ?? ""),
+          province: prev.province || ((p as any)?.province ?? "Punjab"),
+          postal_code: prev.postal_code || ((p as any)?.postal_code ?? ""),
+          landmark: prev.landmark || ((p as any)?.landmark ?? ""),
+        }));
+      });
+  }, [user]);
   const [voucherCode, setVoucherCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [appliedCode, setAppliedCode] = useState<string | null>(null);

@@ -4,10 +4,14 @@ import {
   Cpu,
   Search,
   ShoppingCart,
-  User2,
   LogOut,
   LayoutDashboard,
   Menu,
+  Crown,
+  Store,
+  User2,
+  Settings,
+  Package,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,11 +23,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CategoryTreeNav } from "@/components/site/CategoryTreeNav";
 import { CategoryNavBar } from "@/components/site/CategoryNavBar";
 import { RoleBadge } from "@/components/dashboard/RoleBadge";
+import { primaryRole } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const { count, setDrawerOpen } = useCart();
@@ -43,10 +50,31 @@ export function Header() {
     setMenuOpen(false);
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/" });
+  };
+
+  // Avatar: initials from email or name
+  const initials = user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : "?";
+
+  const primary = roles.length ? primaryRole(roles) : "user";
+
+  const avatarColor: Record<string, string> = {
+    super_admin: "bg-amber-500",
+    admin: "bg-sky-500",
+    vendor: "bg-emerald-500",
+    user: "bg-primary",
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-[color:var(--ink)] text-white shadow-lg overflow-visible">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex h-14 sm:h-16 items-center gap-2 sm:gap-4">
+
+          {/* Mobile menu trigger */}
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -62,46 +90,53 @@ export function Header() {
               <SheetHeader className="border-b px-4 py-4 text-left">
                 <SheetTitle className="flex items-center gap-2">
                   <Cpu className="h-5 w-5 text-primary" />
-                  NexusIoT Menu
+                  NexusIoT
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex-1 overflow-y-auto p-4 space-y-1 text-sm">
-                <Link
-                  to="/"
-                  onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-md hover:bg-muted font-medium"
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/products"
-                  onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-md hover:bg-muted font-medium"
-                >
-                  Shop All
-                </Link>
-                <Link
-                  to="/iot-solutions"
-                  onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-md hover:bg-muted font-medium"
-                >
-                  Enterprise IoT Solutions
-                </Link>
-                <Link
-                  to="/cart"
-                  onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-md hover:bg-muted font-medium"
-                >
-                  Cart {count > 0 ? `(${count})` : ""}
-                </Link>
+                {[
+                  { to: "/", label: "Home" },
+                  { to: "/products", label: "Shop All" },
+                  { to: "/iot-solutions", label: "Enterprise IoT Solutions" },
+                  { to: "/cart", label: `Cart${count > 0 ? ` (${count})` : ""}` },
+                ].map(({ to, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "block px-3 py-2.5 rounded-md hover:bg-muted font-medium transition-colors",
+                      path === to && "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {label}
+                  </Link>
+                ))}
                 <p className="px-1 pt-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Shop by category
                 </p>
                 <CategoryTreeNav />
               </nav>
+              {user && (
+                <div className="border-t p-4 space-y-2">
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {roles.map((r) => <RoleBadge key={r} role={r} size="sm" />)}
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <Button asChild variant="outline" size="sm" className="flex-1">
+                      <Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setMenuOpen(false); handleSignOut(); }}>
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </SheetContent>
           </Sheet>
 
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0 min-w-0">
             <div className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-md bg-primary text-primary-foreground">
               <Cpu className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -111,6 +146,7 @@ export function Header() {
             </span>
           </Link>
 
+          {/* Desktop search */}
           <form onSubmit={submit} className="hidden md:flex flex-1 max-w-2xl min-w-0">
             <div className="relative w-full">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -130,16 +166,18 @@ export function Header() {
             </div>
           </form>
 
+          {/* Desktop nav link */}
           <nav className="hidden lg:flex items-center gap-1 text-sm ml-auto">
             <Link to="/iot-solutions" className="px-3 py-2 hover:text-primary transition rounded-md">
               IoT Solutions
             </Link>
           </nav>
 
+          {/* Cart button */}
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className="relative hidden md:inline-flex items-center gap-2 rounded-md px-3 py-2 min-h-[44px] hover:bg-white/10"
+            className="relative hidden md:inline-flex items-center gap-2 rounded-md px-3 py-2 min-h-[44px] hover:bg-white/10 transition"
             aria-label={`Cart, ${count} items`}
           >
             <ShoppingCart className="h-5 w-5" />
@@ -151,45 +189,70 @@ export function Header() {
             )}
           </button>
 
+          {/* User menu */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10 hover:text-white shrink-0 min-h-[44px]"
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 transition min-h-[44px] shrink-0"
                 >
-                  <User2 className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline max-w-[8rem] truncate">
+                  <div
+                    className={cn(
+                      "grid h-8 w-8 place-items-center rounded-full text-white text-xs font-bold shrink-0",
+                      avatarColor[primary] ?? "bg-primary",
+                    )}
+                  >
+                    {initials}
+                  </div>
+                  <span className="hidden sm:block text-sm max-w-[7rem] truncate">
                     {user.email?.split("@")[0]}
                   </span>
-                </Button>
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {roles.length > 0 && (
-                  <div className="px-2 py-2 flex flex-wrap gap-1 border-b mb-1">
-                    {roles.map((r) => (
-                      <RoleBadge key={r} role={r} size="sm" />
-                    ))}
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel className="pb-1">
+                  <p className="text-sm font-semibold truncate">{user.email?.split("@")[0]}</p>
+                  <p className="text-xs text-muted-foreground font-normal truncate">{user.email}</p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {roles.map((r) => <RoleBadge key={r} role={r} size="sm" />)}
                   </div>
-                )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
                 <DropdownMenuItem onClick={() => navigate({ to: "/account" })}>
-                  <User2 className="h-4 w-4 mr-2" /> My Account
+                  <User2 className="h-4 w-4 mr-2 shrink-0" /> My Account
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/account/orders" })}>
+                  <Package className="h-4 w-4 mr-2 shrink-0" /> My Orders
+                </DropdownMenuItem>
+
                 {isVendor && (
                   <DropdownMenuItem onClick={() => navigate({ to: "/vendor" })}>
-                    <LayoutDashboard className="h-4 w-4 mr-2" /> Vendor Dashboard
+                    <Store className="h-4 w-4 mr-2 shrink-0" /> Vendor Dashboard
                   </DropdownMenuItem>
                 )}
+
                 {isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
-                    {isSuperAdmin ? "Super Admin" : "Admin Dashboard"}
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+                      {isSuperAdmin
+                        ? <Crown className="h-4 w-4 mr-2 shrink-0 text-amber-500" />
+                        : <LayoutDashboard className="h-4 w-4 mr-2 shrink-0" />}
+                      {isSuperAdmin ? "Super Admin" : "Admin Dashboard"}
+                    </DropdownMenuItem>
+                    {isSuperAdmin && (
+                      <DropdownMenuItem onClick={() => navigate({ to: "/admin/users" })}>
+                        <Settings className="h-4 w-4 mr-2 shrink-0" /> Users & Roles
+                      </DropdownMenuItem>
+                    )}
+                  </>
                 )}
+
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
-                  <LogOut className="h-4 w-4 mr-2" /> Sign out
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+                  <LogOut className="h-4 w-4 mr-2 shrink-0" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -200,6 +263,7 @@ export function Header() {
           )}
         </div>
 
+        {/* Mobile search */}
         <form onSubmit={submit} className="md:hidden pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
