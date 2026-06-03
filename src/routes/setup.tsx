@@ -9,9 +9,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Crown, CheckCircle2, ShieldAlert, Loader2, ArrowRight } from "lucide-react";
+import { Crown, CheckCircle2, ShieldAlert, Loader2, ArrowRight, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-
 export const Route = createFileRoute("/setup")({
   head: () => ({ meta: [{ title: "Platform Setup — NexusIoT" }] }),
   component: Setup,
@@ -49,21 +48,30 @@ function Setup() {
     setBusy(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { toast.error("Not signed in"); return; }
+      if (!session) { toast.error("Not signed in"); setBusy(false); return; }
 
-      // Remove any existing role for this user
-      await supabase.from("user_roles").delete().eq("user_id", session.user.id);
+      // Call the SECURITY DEFINER RPC that bypasses RLS safely
+      const { data, error } = await supabase.rpc("bootstrap_super_admin");
 
-      // Grant super_admin
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: session.user.id,
-        role: "super_admin",
-      });
+      if (error) throw new Error(error.message);
 
-      if (error) throw error;
+      const result = data as { ok: boolean; error?: string } | null;
+      if (result && !result.ok) {
+        throw new Error(result.error ?? "Could not activate super admin");
+      }
+
       setStep("done");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed — run SQL manually");
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.toLowerCase().includes("already exists")) {
+        setStep("already");
+      } else {
+        toast.error(
+          msg.includes("function")
+            ? "RPC not found — run the migration in Supabase SQL Editor first. See instructions below."
+            : msg,
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -180,7 +188,48 @@ function Setup() {
           This page disappears once a super admin exists.
           Sign in first if you haven't already.
         </p>
+
+        {/* SQL fallback instructions */}
+        <div className="mt-6 border-t pt-6">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+            Button not working? Run this in Supabase SQL Editor
+          </p>
+          <SqlBlock sql={`-- Step 1: Run migration (once)\nCREATE OR REPLACE FUNCTION public.bootstrap_super_admin()\nRETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$\nDECLARE caller_id UUID; existing_count INT;\nBEGIN\n  caller_id := auth.uid();\n  SELECT COUNT(*) INTO existing_count FROM public.user_roles WHERE role = 'super_admin';\n  IF existing_count > 0 THEN RETURN jsonb_build_object('ok', false, 'error', 'super_admin already exists'); END IF;\n  DELETE FROM public.user_roles WHERE user_id = caller_id;\n  INSERT INTO public.user_roles (user_id, role) VALUES (caller_id, 'super_admin');\n  RETURN jsonb_build_object('ok', true);\nEND; $$;\nGRANT EXECUTE ON FUNCTION public.bootstrap_super_admin() TO authenticated;`} />
+          <div className="mt-3">
+            <p className="text-xs text-muted-foreground mb-2">Or directly grant by email:</p>
+            <SqlBlock sql={`DELETE FROM public.user_roles WHERE user_id = (SELECT id FROM auth.users WHERE email = '${userEmail}');\nINSERT INTO public.user_roles (user_id, role) SELECT id, 'super_admin'::public.app_role FROM auth.users WHERE email = '${userEmail}';`} />
+          </div>
+          <a
+            href="https://supabase.com/dashboard/project/dypyvfuscpuzhrvrmebk/sql/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-3"
+          >
+            Open Supabase SQL Editor →
+          </a>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SqlBlock({ sql }: { sql: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(sql);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div className="relative rounded-lg bg-muted/80 border text-[11px] font-mono overflow-x-auto">
+      <pre className="p-3 pr-10 whitespace-pre-wrap break-words leading-relaxed">{sql}</pre>
+      <button
+        onClick={copy}
+        className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-background text-muted-foreground hover:text-foreground transition"
+        title="Copy SQL"
+      >
+        {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+      </button>
     </div>
   );
 }
