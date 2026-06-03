@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole } from "@/types/commerce";
@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Cpu, ShieldCheck } from "lucide-react";
+import { Cpu, ShieldCheck, Crown } from "lucide-react";
 import { RoleAccessGrid } from "@/components/dashboard/RoleAccessGrid";
 
 export const Route = createFileRoute("/auth")({
@@ -61,15 +61,23 @@ function Auth() {
     await redirectAfterAuth();
   };
   const signUp = async () => {
+    if (!email.trim() || !password) return toast.error("Email and password are required");
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
-      email,
+    const { data: signUpData, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
       password,
       options: { emailRedirectTo: window.location.origin, data: { full_name: name } },
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Account created — please check your email to confirm");
+
+    // If session was returned immediately (email confirm disabled) → redirect
+    if (signUpData.session) {
+      toast.success("Account created — signing you in…");
+      await redirectAfterAuth();
+    } else {
+      toast.success("Account created! Check your email to confirm, then sign in.");
+    }
   };
 
   return (
@@ -170,6 +178,15 @@ function Auth() {
               <p className="text-xs text-muted-foreground text-center leading-relaxed">
                 First registered user becomes super admin. Sign in at /auth, then open Admin from the account menu.
               </p>
+              <div className="border-t pt-4 mt-2 text-center">
+                <p className="text-xs text-muted-foreground mb-2">Already signed in but can't access Admin?</p>
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link to="/setup">
+                    <Crown className="h-3.5 w-3.5 mr-1.5 text-amber-500" />
+                    Activate super admin
+                  </Link>
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </div>

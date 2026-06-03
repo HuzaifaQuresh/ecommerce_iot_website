@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import { RoleAccessGrid } from "@/components/dashboard/RoleAccessGrid";
 import { primaryRole, ROLE_CATALOG } from "@/lib/roles";
 import { PK_PROVINCES } from "@/lib/pakistan-address";
 import { toast } from "sonner";
-import { Shield, Mail, Phone, User, MapPin } from "lucide-react";
+import { Shield, Mail, Phone, User, MapPin, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/account/")({ component: AccountProfile });
 
@@ -171,8 +171,22 @@ function AccountProfile() {
         </div>
         <RoleAccessGrid compact highlight={primary} />
         <p className="text-xs text-muted-foreground mt-4">
-          Need vendor or admin access? Contact your platform super admin or sign up first on a fresh project.
+          Need vendor or admin access? Contact your platform super admin or use the setup tool below.
         </p>
+        <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <Crown className="h-4 w-4 text-amber-500 shrink-0" />
+              No super admin yet?
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              If your account doesn't have admin access, use the one-time setup page to activate it.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm" className="shrink-0">
+            <Link to="/setup">Activate super admin</Link>
+          </Button>
+        </div>
       </SectionCard>
     </div>
   );

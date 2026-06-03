@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VendorRouteImport } from './routes/vendor'
+import { Route as SetupRouteImport } from './routes/setup'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as IotSolutionsRouteImport } from './routes/iot-solutions'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -41,6 +42,11 @@ import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.order
 const VendorRoute = VendorRouteImport.update({
   id: '/vendor',
   path: '/vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductsRoute = ProductsRouteImport.update({
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/iot-solutions': typeof IotSolutionsRoute
   '/products': typeof ProductsRouteWithChildren
+  '/setup': typeof SetupRoute
   '/vendor': typeof VendorRouteWithChildren
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -215,6 +222,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/iot-solutions': typeof IotSolutionsRoute
+  '/setup': typeof SetupRoute
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/orders': typeof AdminOrdersRouteWithChildren
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/iot-solutions': typeof IotSolutionsRoute
   '/products': typeof ProductsRouteWithChildren
+  '/setup': typeof SetupRoute
   '/vendor': typeof VendorRouteWithChildren
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/iot-solutions'
     | '/products'
+    | '/setup'
     | '/vendor'
     | '/account/orders'
     | '/admin/analytics'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/iot-solutions'
+    | '/setup'
     | '/account/orders'
     | '/admin/analytics'
     | '/admin/orders'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/iot-solutions'
     | '/products'
+    | '/setup'
     | '/vendor'
     | '/account/orders'
     | '/admin/analytics'
@@ -364,6 +376,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   IotSolutionsRoute: typeof IotSolutionsRoute
   ProductsRoute: typeof ProductsRouteWithChildren
+  SetupRoute: typeof SetupRoute
   VendorRoute: typeof VendorRouteWithChildren
   ProductSlugRoute: typeof ProductSlugRoute
 }
@@ -375,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor'
       fullPath: '/vendor'
       preLoaderRoute: typeof VendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/products': {
@@ -670,6 +690,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   IotSolutionsRoute: IotSolutionsRoute,
   ProductsRoute: ProductsRouteWithChildren,
+  SetupRoute: SetupRoute,
   VendorRoute: VendorRouteWithChildren,
   ProductSlugRoute: ProductSlugRoute,
 }
